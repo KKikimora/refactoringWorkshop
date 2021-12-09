@@ -212,15 +212,20 @@ Controller::Segment Controller::getNewHead() const
 
     return newHead;
 }
+void Controller::handlePauseInd(const PauseInd&)
+{
+    is_pause = !is_pause;
+}
 
 void Controller::receive(std::unique_ptr<Event> e)
 {
     switch(e->getMessageId())
     {
-        case TimeoutInd::MESSAGE_ID: return handleTimePassed(*static_cast<EventT<TimeoutInd> const&>(*e));
-        case DirectionInd::MESSAGE_ID: return handleDirectionChange(*static_cast<EventT<DirectionInd> const&>(*e));
+        case TimeoutInd::MESSAGE_ID: if(!is_pause) return handleTimePassed(*static_cast<EventT<TimeoutInd> const&>(*e)); break;
+        case DirectionInd::MESSAGE_ID: if(!is_pause) return handleDirectionChange(*static_cast<EventT<DirectionInd> const&>(*e)); else break;
         case FoodInd::MESSAGE_ID: return handleFoodPositionChange(*static_cast<EventT<FoodInd> const&>(*e));
         case FoodResp::MESSAGE_ID: return handleNewFood(*static_cast<EventT<FoodResp> const&>(*e));
+        case PauseInd::MESSAGE_ID: return handlePauseInd(*static_cast<EventT<PauseInd> const&>(*e));
         default: throw UnexpectedEventException();
     };
 }
